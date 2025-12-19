@@ -1,8 +1,9 @@
 import { Router } from "express";
 import db from "../config/db";
 import authRoutes from "./auth.routes";
-import packageRoutes from "./package.routes";
+
 import { authMiddleware } from "../middlewares/auth.middleware";
+import packageRoutes from "./package.routes";
 import scanRoutes from "./scan.routes";
 import stateRoutes from "./state.routes";
 import cityRoutes from "./city.routes";
