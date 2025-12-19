@@ -45,7 +45,7 @@ router.post(
 router.get(
   "/",
   authMiddleware,
-  allowRoles([ROLES.NTA_ADMIN, ROLES.DISPATCH]),
+  // allowRoles([ROLES.NTA_ADMIN, ROLES.DISPATCH]),
   controller.getAllPackages
 );
 router.post("/inner", authMiddleware, controller.createInner);
