@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 import * as service from "../services/package.service";
-import { AuthRequest } from "../middlewares/auth.middleware";
+
 import db from "../config/db";
-export const createOuter = async (req: AuthRequest, res: Response) => {
+export const createOuter = async (req: Request, res: Response) => {
   const result = await service.createOuterPackage(req.body, req.user.user_id);
   res.json({ success: true, data: result });
 };
 
-export const createInner = async (req: AuthRequest, res: Response) => {
+export const createInner = async (req: Request, res: Response) => {
   const result = await service.createInnerPackage(req.body, req.user.user_id);
   res.json({ success: true, data: result });
 };
@@ -19,7 +19,7 @@ export const getPackage = async (req: Request, res: Response) => {
 /**
  * Add package movement event
  */
-export const addEvent = async (req: AuthRequest, res: Response) => {
+export const addEvent = async (req: Request, res: Response) => {
   const { trackingId } = req.params;
   const { event_type, latitude, longitude } = req.body;
 
@@ -47,7 +47,7 @@ export const addEvent = async (req: AuthRequest, res: Response) => {
 /**
  * Get package movement history
  */
-export const getEvents = async (req: AuthRequest, res: Response) => {
+export const getEvents = async (req: Request, res: Response) => {
   const { trackingId } = req.params;
 
   const { rows } = await db.query(

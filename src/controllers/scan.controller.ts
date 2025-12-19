@@ -1,8 +1,8 @@
-import { Response } from "express";
-import { AuthRequest } from "../middlewares/auth.middleware";
+import { Request, Response } from "express";
+
 import * as service from "../services/scan.service";
 
-export const syncScans = async (req: AuthRequest, res: Response) => {
+export const syncScans = async (req: Request, res: Response) => {
   const scans = req.body.scans;
 
   if (!Array.isArray(scans)) {
@@ -27,12 +27,12 @@ export const syncScans = async (req: AuthRequest, res: Response) => {
   });
 };
 
-export const singleScan = async (req: AuthRequest, res: Response) => {
+export const singleScan = async (req: Request, res: Response) => {
   const result = await service.saveScan(req.body, req.user.user_id);
   res.json({ success: true, data: result });
 };
 
-export const getScans = async (req: AuthRequest, res: Response) => {
+export const getScans = async (req: Request, res: Response) => {
   const scans = await service.getScanHistory(req.params.trackingId);
   res.json({ success: true, data: scans });
 };

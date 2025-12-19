@@ -1,9 +1,8 @@
-import { Response } from "express";
-import { AuthRequest } from "../middlewares/auth.middleware";
+import { Request, Response } from "express";
 import { generateQrCode } from "../services/qr.service";
 import db from "../config/db";
 
-export const createQr = async (req: AuthRequest, res: Response) => {
+export const createQr = async (req: Request, res: Response) => {
   const { tracking_id, qr_type, payload } = req.body;
 
   if (!tracking_id || !qr_type) {
@@ -22,7 +21,7 @@ export const createQr = async (req: AuthRequest, res: Response) => {
   res.json({ success: true, data: result });
 };
 
-export const getQr = async (req: AuthRequest, res: Response) => {
+export const getQr = async (req: Request, res: Response) => {
   const { trackingId } = req.params;
 
   const { rows } = await db.query(

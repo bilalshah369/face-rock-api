@@ -1,9 +1,9 @@
-import { Response, NextFunction } from "express";
-import { AuthRequest } from "./auth.middleware";
+import { Request, Response, NextFunction } from "express";
+
 import { logAudit } from "../services/audit.service";
 
 export const auditMiddleware = (eventType: string, entityType: string) => {
-  return async (req: AuthRequest, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     res.on("finish", async () => {
       if (res.statusCode >= 200 && res.statusCode < 400) {
         await logAudit({

@@ -1,8 +1,7 @@
-import { Response } from "express";
-import { AuthRequest } from "../middlewares/auth.middleware";
+import { Request, Response } from "express";
 import db from "../config/db";
 
-export const list = async (req: AuthRequest, res: Response) => {
+export const list = async (req: Request, res: Response) => {
   debugger;
   const { event_type, entity_type, from, to } = req.query;
 

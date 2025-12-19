@@ -1,8 +1,7 @@
-import { Response, NextFunction } from "express";
-import { AuthRequest } from "./auth.middleware";
+import { Request, Response, NextFunction } from "express";
 
 export const allowRoles = (allowedRoles: number[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user || !req.user.role_id) {
       return res.status(403).json({
         message: "Access denied",
