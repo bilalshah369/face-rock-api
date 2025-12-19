@@ -15,10 +15,50 @@ export const generateQrCode = async (
   payloadData: any,
   userId: number
 ) => {
+  //Gt details from db
+  const { rows } = await db.query(
+    `
+  SELECT
+    p.tracking_id,
+    p.encrypted_qr_payload,
+    c.centre_name,c.centre_code,
+    p.package_type
+  FROM (
+    SELECT
+      tracking_id,
+      encrypted_qr_payload,
+      centre_id,
+      'OUTER' AS package_type
+    FROM packages_outer
+    WHERE tracking_id = $1
+
+    UNION ALL
+
+    SELECT
+      tracking_id,
+      encrypted_qr_payload,
+      centre_id,
+      'INNER' AS package_type
+    FROM packages_inner
+    WHERE tracking_id = $1
+  ) p
+  JOIN centres c ON c.centre_id = p.centre_id
+  LIMIT 1
+  `,
+    [trackingId]
+  );
+  if (rows.length === 0) {
+    throw new Error("Tracking ID not found");
+  }
+  const packageData = rows[0];
+
   // 1️⃣ Create payload
   const payload = JSON.stringify({
     tracking_id: trackingId,
     qr_type: qrType,
+    centre_name: packageData.centre_name,
+    encrypted_qr_payload: packageData.encrypted_qr_payload,
+    //package_type: packageData.package_type,
     ...payloadData,
   });
 

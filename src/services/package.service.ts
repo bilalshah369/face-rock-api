@@ -1,6 +1,14 @@
 import db from "../config/db";
-
+import CryptoJS from "crypto-js";
+const QR_SECRET = process.env.QR_SECRET_KEY!;
+const QR_IV = CryptoJS.enc.Utf8.parse(process.env.QR_IV_KEY!);
 export const createOuterPackage = async (data: any, userId: number) => {
+  // Encrypt payload
+  const encrypted = CryptoJS.AES.encrypt(
+    data.encrypted_qr_payload,
+    CryptoJS.enc.Utf8.parse(QR_SECRET),
+    { iv: QR_IV }
+  ).toString();
   const query = `
     INSERT INTO outer_packages
       (tracking_id, destination_centre_id, encrypted_qr_payload, created_by)
@@ -11,7 +19,7 @@ export const createOuterPackage = async (data: any, userId: number) => {
   const values = [
     data.tracking_id,
     data.destination_centre_id,
-    data.encrypted_qr_payload,
+    encrypted,
     userId,
   ];
 
@@ -20,6 +28,12 @@ export const createOuterPackage = async (data: any, userId: number) => {
 };
 
 export const createInnerPackage = async (data: any, userId: number) => {
+  // Encrypt payload
+  const encrypted = CryptoJS.AES.encrypt(
+    data.encrypted_qr_payload,
+    CryptoJS.enc.Utf8.parse(QR_SECRET),
+    { iv: QR_IV }
+  ).toString();
   const query = `
     INSERT INTO inner_packages
       (tracking_id, outer_package_id, centre_id, exam_date, encrypted_qr_payload, created_by)
@@ -32,7 +46,7 @@ export const createInnerPackage = async (data: any, userId: number) => {
     data.outer_package_id,
     data.centre_id,
     data.exam_date,
-    data.encrypted_qr_payload,
+    encrypted,
     userId,
   ];
 
