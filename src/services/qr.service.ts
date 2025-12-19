@@ -27,9 +27,9 @@ export const generateQrCode = async (
     SELECT
       tracking_id,
       encrypted_qr_payload,
-      centre_id,
+      destination_centre_id as centre_id,
       'OUTER' AS package_type
-    FROM packages_outer
+    FROM public.outer_packages
     WHERE tracking_id = $1
 
     UNION ALL
@@ -39,7 +39,7 @@ export const generateQrCode = async (
       encrypted_qr_payload,
       centre_id,
       'INNER' AS package_type
-    FROM packages_inner
+    FROM public.inner_packages
     WHERE tracking_id = $1
   ) p
   JOIN centres c ON c.centre_id = p.centre_id
