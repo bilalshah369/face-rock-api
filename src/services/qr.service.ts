@@ -1,12 +1,13 @@
 import QRCode from "qrcode";
 import CryptoJS from "crypto-js";
-import fs from "fs";
-import path from "path";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import s3 from "../config/s3";
 import db from "../config/db";
 
 const QR_SECRET = process.env.QR_SECRET_KEY!;
 const QR_IV = CryptoJS.enc.Utf8.parse(process.env.QR_IV_KEY!);
-const QR_DIR = process.env.QR_UPLOAD_PATH!;
+const BUCKET_NAME = process.env.AWS_BUCKET_NAME!;
+const REGION = process.env.AWS_REGION!;
 
 export const generateQrCode = async (
   trackingId: string,
@@ -14,44 +15,53 @@ export const generateQrCode = async (
   payloadData: any,
   userId: number
 ) => {
-  // 1. Create payload
+  // 1️⃣ Create payload
   const payload = JSON.stringify({
     tracking_id: trackingId,
     qr_type: qrType,
     ...payloadData,
   });
 
-  // 2. Encrypt payload
+  // 2️⃣ Encrypt payload
   const encrypted = CryptoJS.AES.encrypt(
     payload,
     CryptoJS.enc.Utf8.parse(QR_SECRET),
     { iv: QR_IV }
   ).toString();
 
-  // 3. Ensure directory exists
-  if (!fs.existsSync(QR_DIR)) {
-    fs.mkdirSync(QR_DIR, { recursive: true });
-  }
-
-  // 4. Generate QR image
-  const fileName = `${trackingId}_${qrType}.png`;
-  const filePath = path.join(QR_DIR, fileName);
-
-  await QRCode.toFile(filePath, encrypted, {
+  // 3️⃣ Generate QR as BUFFER
+  const qrBuffer = await QRCode.toBuffer(encrypted, {
     width: 300,
     margin: 2,
   });
 
-  // 5. Store in DB
+  // 4️⃣ S3 key (path)
+  const s3Key = `qrcodes/${trackingId}_${qrType}.png`;
+
+  // 5️⃣ Upload to S3
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: s3Key,
+      Body: qrBuffer,
+      ContentType: "image/png",
+    })
+  );
+
+  // 6️⃣ Store metadata in DB
   await db.query(
     `INSERT INTO qr_codes
      (tracking_id, qr_type, encrypted_payload, qr_image_path, created_by)
      VALUES ($1, $2, $3, $4, $5)`,
-    [trackingId, qrType, encrypted, filePath, userId]
+    [trackingId, qrType, encrypted, s3Key, userId]
   );
 
+  // 7️⃣ Public URL (works only if bucket is public)
+  const qrImageUrl = `https://${BUCKET_NAME}.s3.${REGION}.amazonaws.com/${s3Key}`;
+
   return {
-    qr_image_url: `${process.env.BASE_URL}/${filePath}`,
+    qr_image_url: qrImageUrl,
     encrypted_payload: encrypted,
+    s3_key: s3Key,
   };
 };
