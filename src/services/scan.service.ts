@@ -39,7 +39,7 @@ export const saveScan = async (scan: ScanPayload, userId: number) => {
   // Create movement event
   const eventQuery = `
     INSERT INTO package_events
-      (tracking_id, event_type, event_datetime, user_id,
+      (tracking_id,    event_type, event_datetime, user_id,
        latitude, longitude, created_by)
     VALUES ($1,'IN_TRANSIT',$2,$3,$4,$5,$6);
   `;
