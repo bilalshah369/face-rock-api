@@ -9,7 +9,7 @@ interface LoginPayload {
 
 export const loginUser = async ({ username, password }: LoginPayload) => {
   const query = `
-    SELECT *
+    SELECT user_id, username, password, role_id
     FROM users
     WHERE username = $1 AND is_active = true and password=$2
   `;
@@ -42,10 +42,6 @@ export const loginUser = async ({ username, password }: LoginPayload) => {
 
   return {
     token,
-    user: {
-      user_id: user.user_id,
-      username: user.username,
-      role_id: user.role_id,
-    },
+    user: user,
   };
 };
