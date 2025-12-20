@@ -16,6 +16,16 @@ export const getPackage = async (req: Request, res: Response) => {
   const result = await service.getPackageByTracking(req.params.trackingId);
   res.json({ success: true, data: result });
 };
+export const getInnerPackageByPackageId = async (
+  req: Request,
+  res: Response
+) => {
+  const result = await service.getInnerPackageByPackageId(
+    req.params.outer_package_id
+  );
+  res.json({ success: true, data: result });
+};
+
 /**
  * Add package movement event
  */

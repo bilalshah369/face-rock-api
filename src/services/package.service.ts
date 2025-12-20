@@ -13,13 +13,19 @@ export const createOuterPackage = async (data: any, userId: number) => {
     INSERT INTO outer_packages
       (tracking_id, destination_centre_id, encrypted_qr_payload, created_by)
     VALUES ($1, $2, $3, $4)
+    ON CONFLICT (tracking_id)
+    DO UPDATE SET
+      destination_centre_id = EXCLUDED.destination_centre_id,
+      encrypted_qr_payload = EXCLUDED.encrypted_qr_payload,
+      updated_by = $4,
+      updated_at = NOW()
     RETURNING *;
   `;
 
   const values = [
     data.tracking_id,
     data.destination_centre_id,
-    encrypted,
+    data.encrypted_qr_payload,
     userId,
   ];
 
@@ -68,5 +74,16 @@ export const getPackageByTracking = async (trackingId: string) => {
   return {
     outer: outer.rows[0] || null,
     inner: inner.rows[0] || null,
+  };
+};
+
+export const getInnerPackageByPackageId = async (trackingId: string) => {
+  const inner = await db.query(
+    `SELECT * FROM inner_packages WHERE outer_package_id = $1`,
+    [trackingId]
+  );
+
+  return {
+    inner: inner.rows || null,
   };
 };

@@ -48,6 +48,12 @@ router.get(
   // allowRoles([ROLES.NTA_ADMIN, ROLES.DISPATCH]),
   controller.getAllPackages
 );
+router.get(
+  "/getInnerPackageByOuterPackageId/:outer_package_id",
+  authMiddleware,
+  // allowRoles([ROLES.NTA_ADMIN, ROLES.DISPATCH]),
+  controller.getInnerPackageByPackageId
+);
 router.post("/inner", authMiddleware, controller.createInner);
 router.get("/:trackingId", authMiddleware, controller.getPackage);
 router.post(
