@@ -59,12 +59,13 @@ export const saveScan = async (scan: ScanPayload, userId: number) => {
 export const getScanHistory = async (trackingId: string) => {
   const { rows } = await db.query(
     `
-    SELECT *
-    FROM scan_logs
-    WHERE lower(tracking_id) = lower($1)
-    ORDER BY scan_datetime ASC
+   SELECT b.full_name,a.*
+    FROM scan_logs a
+	left join users b on a.scanned_by=b.user_id
+    WHERE lower(a.tracking_id) = $1
+    ORDER BY a.scan_datetime ASC
     `,
-    [trackingId]
+    [trackingId?.toLowerCase() || ""]
   );
 
   return rows;
