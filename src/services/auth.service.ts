@@ -9,7 +9,7 @@ interface LoginPayload {
 
 export const loginUser = async ({ username, password }: LoginPayload) => {
   const query = `
-    SELECT user_id, username, password, role_id
+    SELECT *
     FROM users
     WHERE username = $1 AND is_active = true and password=$2
   `;
