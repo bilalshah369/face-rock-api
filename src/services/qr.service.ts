@@ -89,10 +89,24 @@ export const generateQrCode = async (
   );
 
   // 6️⃣ Store metadata in DB
+  // await db.query(
+  //   `INSERT INTO qr_codes
+  //    (tracking_id, qr_type, encrypted_payload, qr_image_path, created_by)
+  //    VALUES ($1, $2, $3, $4, $5)`,
+  //   [trackingId, qrType, encrypted, s3Key, userId]
+  // );
   await db.query(
-    `INSERT INTO qr_codes
-     (tracking_id, qr_type, encrypted_payload, qr_image_path, created_by)
-     VALUES ($1, $2, $3, $4, $5)`,
+    `
+  INSERT INTO qr_codes
+    (tracking_id, qr_type, encrypted_payload, qr_image_path, created_by)
+  VALUES ($1, $2, $3, $4, $5)
+  ON CONFLICT (tracking_id)
+  DO UPDATE SET
+    encrypted_payload = EXCLUDED.encrypted_payload,
+    qr_image_path = EXCLUDED.qr_image_path,
+    updated_by = $5,
+    updated_on = NOW()
+  `,
     [trackingId, qrType, encrypted, s3Key, userId]
   );
 

@@ -18,7 +18,7 @@ export const createOuterPackage = async (data: any, userId: number) => {
       destination_centre_id = EXCLUDED.destination_centre_id,
       encrypted_qr_payload = EXCLUDED.encrypted_qr_payload,
       updated_by = $4,
-      updated_at = NOW()
+      updated_on = NOW()
     RETURNING *;
   `;
 
@@ -76,14 +76,29 @@ export const getPackageByTracking = async (trackingId: string) => {
     inner: inner.rows[0] || null,
   };
 };
+const buildS3Url = (path: string | null) => {
+  if (!path) return null;
 
+  const qrImageUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${
+    process.env.AWS_REGION
+  }.amazonaws.com/${path.replace(/\\/g, "/")}`;
+  return qrImageUrl;
+};
 export const getInnerPackageByPackageId = async (trackingId: string) => {
-  const inner = await db.query(
-    `SELECT * FROM inner_packages WHERE outer_package_id = $1`,
+  const result = await db.query(
+    `SELECT 
+        a.tracking_id,
+        c.qr_image_path,
+        c.encrypted_payload
+     FROM inner_packages a
+     LEFT JOIN outer_packages b ON a.outer_package_id = b.outer_package_id
+     LEFT JOIN qr_codes c ON b.tracking_id = c.tracking_id
+     WHERE b.tracking_id = $1`,
     [trackingId]
   );
 
-  return {
-    inner: inner.rows || null,
-  };
+  return result.rows.map((row) => ({
+    ...row,
+    qr_image_url: buildS3Url(row.qr_image_path),
+  }));
 };
