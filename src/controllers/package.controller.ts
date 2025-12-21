@@ -119,3 +119,62 @@ export const getAllPackages = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const getAllPackagesView = async (req: Request, res: Response) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      tracking_id,
+      status,
+      package_type,
+    } = req.query;
+
+    const offset = (Number(page) - 1) * Number(limit);
+    const values: any[] = [];
+    let whereClause = "WHERE 1=1";
+
+    if (tracking_id) {
+      values.push(`%${tracking_id}%`);
+      whereClause += ` AND tracking_id ILIKE $${values.length}`;
+    }
+
+    if (status) {
+      values.push(status);
+      whereClause += ` AND status = $${values.length}`;
+    }
+
+    if (package_type) {
+      values.push(package_type);
+      whereClause += ` AND package_type = $${values.length}`;
+    }
+
+    const query = `
+      SELECT a.*,b.centre_code,b.centre_name
+      FROM public.vw_all_packages  a
+      inner join public.centres b on a.centre_id=b.centre_id
+      ${whereClause}
+      ORDER BY created_on DESC
+      LIMIT $${values.length + 1}
+      OFFSET $${values.length + 2}
+    `;
+
+    values.push(Number(limit), offset);
+
+    const result = await db.query(query, values);
+
+    res.status(200).json({
+      success: true,
+      page: Number(page),
+      limit: Number(limit),
+      count: result.rowCount,
+      data: result.rows,
+    });
+  } catch (error) {
+    console.error("Get packages error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch packages",
+    });
+  }
+};

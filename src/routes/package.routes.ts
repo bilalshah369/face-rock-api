@@ -49,6 +49,18 @@ router.get(
   controller.getAllPackages
 );
 router.get(
+  "/ViewPackages",
+  authMiddleware,
+  // allowRoles([ROLES.NTA_ADMIN, ROLES.DISPATCH]),
+  controller.getAllPackagesView
+);
+router.get(
+  "/ViewPackages/:trackingId",
+  authMiddleware,
+  // allowRoles([ROLES.NTA_ADMIN, ROLES.DISPATCH]),
+  controller.getAllPackagesView
+);
+router.get(
   "/getInnerPackageByOuterPackageId/:outer_package_id",
   authMiddleware,
   // allowRoles([ROLES.NTA_ADMIN, ROLES.DISPATCH]),

@@ -61,8 +61,26 @@ export const createInnerPackage = async (data: any, userId: number) => {
 };
 
 export const getPackageByTracking = async (trackingId: string) => {
+  // const outer = await db.query(
+  //   `SELECT * FROM outer_packages WHERE tracking_id = $1`,
+  //   [trackingId]
+  // );
+
   const outer = await db.query(
-    `SELECT * FROM outer_packages WHERE tracking_id = $1`,
+    `
+  SELECT *
+  FROM outer_packages
+  WHERE tracking_id = $1
+
+  UNION ALL
+
+  SELECT o.*
+  FROM outer_packages o
+  INNER JOIN inner_packages i
+    ON i.outer_package_id = o.outer_package_id
+  WHERE i.tracking_id = $1
+  LIMIT 1
+  `,
     [trackingId]
   );
 
