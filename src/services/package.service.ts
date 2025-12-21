@@ -68,13 +68,13 @@ export const getPackageByTracking = async (trackingId: string) => {
 
   const outer = await db.query(
     `
-  SELECT *
+  SELECT *,tracking_id as outer_tracking_id 
   FROM outer_packages
   WHERE tracking_id = $1
 
   UNION ALL
 
-  SELECT o.*
+  SELECT o.*,o.tracking_id as outer_tracking_id 
   FROM outer_packages o
   INNER JOIN inner_packages i
     ON i.outer_package_id = o.outer_package_id
