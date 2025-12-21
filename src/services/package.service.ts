@@ -35,24 +35,32 @@ export const createOuterPackage = async (data: any, userId: number) => {
 
 export const createInnerPackage = async (data: any, userId: number) => {
   // Encrypt payload
-  const encrypted = CryptoJS.AES.encrypt(
-    data.encrypted_qr_payload,
-    CryptoJS.enc.Utf8.parse(QR_SECRET),
-    { iv: QR_IV }
-  ).toString();
+  // const encrypted = CryptoJS.AES.encrypt(
+  //   data.encrypted_qr_payload,
+  //   CryptoJS.enc.Utf8.parse(QR_SECRET),
+  //   { iv: QR_IV }
+  // ).toString();
   const query = `
-    INSERT INTO inner_packages
-      (tracking_id, outer_package_id, centre_id, exam_date, encrypted_qr_payload, created_by)
-    VALUES ($1, $2, $3, $4, $5, $6)
-    RETURNING *;
-  `;
+  INSERT INTO inner_packages
+    (tracking_id, outer_package_id, centre_id, exam_date, encrypted_qr_payload, created_by)
+  VALUES ($1, $2, $3, $4, $5, $6)
+  ON CONFLICT (tracking_id)
+  DO UPDATE SET
+    outer_package_id      = EXCLUDED.outer_package_id,
+    centre_id             = EXCLUDED.centre_id,
+    exam_date             = EXCLUDED.exam_date,
+    encrypted_qr_payload  = EXCLUDED.encrypted_qr_payload,
+    updated_by            = $6,
+    updated_on            = NOW()
+  RETURNING *;
+`;
 
   const values = [
     data.tracking_id,
     data.outer_package_id,
     data.centre_id,
     data.exam_date,
-    encrypted,
+    data.encrypted_qr_payload,
     userId,
   ];
 
