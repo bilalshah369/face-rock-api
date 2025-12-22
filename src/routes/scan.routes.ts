@@ -64,6 +64,6 @@ router.post(
 );
 router.post("/single", authMiddleware, controller.singleScan);
 router.get("/:trackingId", authMiddleware, controller.getScans);
-router.get("/getJourney/:trackingId?", authMiddleware, controller.getJourney);
+router.get("/getJourney/:trackingId", authMiddleware, controller.getJourney);
 
 export default router;
