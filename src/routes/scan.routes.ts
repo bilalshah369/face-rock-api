@@ -62,8 +62,8 @@ router.post(
   auditMiddleware("SCAN", "QR_SCAN"),
   controller.syncScans
 );
+router.get("/getJourney", authMiddleware, controller.getJourney);
 router.post("/single", authMiddleware, controller.singleScan);
 router.get("/:trackingId", authMiddleware, controller.getScans);
-router.get("/getJourney", authMiddleware, controller.getJourney);
 
 export default router;

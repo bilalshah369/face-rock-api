@@ -87,16 +87,45 @@ export const getScanJourney = async (
 ): Promise<DestinationJourney[]> => {
   const { rows } = await db.query(
     `
-    SELECT 
-      a.latitude,
-      a.longitude,
-      a.destination_centre_id,
-      c.latitude AS centre_latitude,
-      c.longitude AS centre_longitude
-    FROM scan_logs a
-    LEFT JOIN centres c ON a.destination_centre_id = c.centre_id
-    WHERE ($1 IS NULL OR lower(a.tracking_id) = lower($1))
-    ORDER BY a.scan_datetime ASC
+   SELECT
+  -- scan info
+  a.scan_id,
+  a.tracking_id,
+  a.qr_type,
+  a.scan_datetime,
+  a.latitude,
+  a.longitude,
+
+  -- user (who scanned)
+  u.user_id AS scanned_by_user_id,
+  u.full_name AS scanned_by_name,
+
+  -- destination centre
+  c.centre_id,
+  c.latitude AS centre_latitude,
+  c.longitude AS centre_longitude,
+
+  -- package info
+  p.package_id,
+  p.package_type,
+  p.status,
+  p.exam_date,
+  p.dispatch_datetime,
+  p.return_dispatch_datetime,
+  p.created_on AS package_created_on
+
+FROM scan_logs a
+LEFT JOIN users u
+  ON a.scanned_by = u.user_id
+  LEFT JOIN vw_all_packages p
+  ON lower(p.tracking_id) = lower(a.tracking_id)
+LEFT JOIN centres c
+  ON p.centre_id = c.centre_id
+
+
+WHERE ($1::text IS NULL OR lower(a.tracking_id) = lower($1::text))
+ORDER BY a.scan_datetime ASC;
+
     `,
     [trackingId ?? null]
   );
@@ -104,7 +133,7 @@ export const getScanJourney = async (
   const journeyMap = new Map<number, DestinationJourney>();
 
   for (const row of rows) {
-    const centreId = row.destination_centre_id;
+    const centreId = row.centre_id;
 
     if (!centreId) continue;
 
