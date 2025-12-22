@@ -87,7 +87,7 @@ export const getScanJourney = async (
 ): Promise<DestinationJourney[]> => {
   const { rows } = await db.query(
     `
-   SELECT
+   SELECT 
   -- scan info
   a.scan_id,
   a.tracking_id,
