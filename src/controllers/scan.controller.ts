@@ -37,6 +37,7 @@ export const getScans = async (req: Request, res: Response) => {
   res.json({ success: true, data: scans });
 };
 export const getJourney = async (req: Request, res: Response) => {
-  const scans = await service.getScanJourney(req.params.trackingId);
+  const trackingId = req.query.trackingId as string | undefined;
+  const scans = await service.getScanJourney(trackingId);
   res.json({ success: true, data: scans });
 };
