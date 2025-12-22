@@ -36,3 +36,7 @@ export const getScans = async (req: Request, res: Response) => {
   const scans = await service.getScanHistory(req.params.trackingId);
   res.json({ success: true, data: scans });
 };
+export const getJourney = async (req: Request, res: Response) => {
+  const scans = await service.getScanJourney(req.params.trackingId);
+  res.json({ success: true, data: scans });
+};

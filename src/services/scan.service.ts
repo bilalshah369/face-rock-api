@@ -70,3 +70,60 @@ export const getScanHistory = async (trackingId: string) => {
 
   return rows;
 };
+
+type ScanPoint = {
+  latitude: number;
+  longitude: number;
+};
+
+type DestinationJourney = {
+  destinationId: string;
+  destinationLocation: ScanPoint;
+  scans: ScanPoint[];
+};
+
+export const getScanJourney = async (
+  trackingId: string
+): Promise<DestinationJourney[]> => {
+  const { rows } = await db.query(
+    `
+    SELECT 
+      a.latitude,
+      a.longitude,
+      a.destination_centre_id,
+      c.latitude AS centre_latitude,
+      c.longitude AS centre_longitude
+    FROM scan_logs a
+    LEFT JOIN centres c ON a.destination_centre_id = c.centre_id
+    WHERE ($1 IS NULL OR lower(a.tracking_id) = lower($1))
+    ORDER BY a.scan_datetime ASC
+    `,
+    [trackingId ?? null]
+  );
+
+  const journeyMap = new Map<number, DestinationJourney>();
+
+  for (const row of rows) {
+    const centreId = row.destination_centre_id;
+
+    if (!centreId) continue;
+
+    if (!journeyMap.has(centreId)) {
+      journeyMap.set(centreId, {
+        destinationId: String(centreId),
+        destinationLocation: {
+          latitude: Number(row.centre_latitude),
+          longitude: Number(row.centre_longitude),
+        },
+        scans: [],
+      });
+    }
+
+    journeyMap.get(centreId)!.scans.push({
+      latitude: Number(row.latitude),
+      longitude: Number(row.longitude),
+    });
+  }
+
+  return Array.from(journeyMap.values());
+};
