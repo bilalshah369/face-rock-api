@@ -114,8 +114,8 @@ export const getInnerPackageByPackageId = async (trackingId: string) => {
   const result = await db.query(
     `SELECT 
         a.tracking_id,
-        c.qr_image_path,
-        c.encrypted_payload
+        a.qr_image_path,
+        a.encrypted_payload
      FROM inner_packages a
      LEFT JOIN outer_packages b ON a.outer_package_id = b.outer_package_id
      LEFT JOIN qr_codes c ON b.tracking_id = c.tracking_id
