@@ -73,7 +73,7 @@ export const getEvents = async (req: Request, res: Response) => {
 
 export const getAllPackages = async (req: Request, res: Response) => {
   try {
-    const { page = 1, limit = 20, tracking_id, status } = req.query;
+    const { page = 1, limit = 200000, tracking_id, status } = req.query;
 
     const offset = (Number(page) - 1) * Number(limit);
 
@@ -128,6 +128,7 @@ export const getAllPackagesView = async (req: Request, res: Response) => {
       tracking_id,
       status,
       package_type,
+      centre,
     } = req.query;
 
     const offset = (Number(page) - 1) * Number(limit);
@@ -148,7 +149,17 @@ export const getAllPackagesView = async (req: Request, res: Response) => {
       values.push(package_type);
       whereClause += ` AND package_type = $${values.length}`;
     }
-
+    if (centre) {
+      values.push(centre);
+      whereClause += ` AND a.centre_id = $${values.length}`;
+    }
+    const total_query = `
+      SELECT a.*,b.centre_code,b.centre_name
+      FROM public.vw_all_packages  a
+      inner join public.centres b on a.centre_id=b.centre_id
+      ${whereClause}
+      
+    `;
     const query = `
       SELECT a.*,b.centre_code,b.centre_name
       FROM public.vw_all_packages  a
@@ -158,7 +169,7 @@ export const getAllPackagesView = async (req: Request, res: Response) => {
       LIMIT $${values.length + 1}
       OFFSET $${values.length + 2}
     `;
-
+    const result_total = await db.query(total_query, values);
     values.push(Number(limit), offset);
 
     const result = await db.query(query, values);
@@ -167,7 +178,7 @@ export const getAllPackagesView = async (req: Request, res: Response) => {
       success: true,
       page: Number(page),
       limit: Number(limit),
-      count: result.rowCount,
+      count: result_total.rowCount,
       data: result.rows,
     });
   } catch (error) {
@@ -175,6 +186,62 @@ export const getAllPackagesView = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: "Failed to fetch packages",
+    });
+  }
+};
+
+export const bulkUploadOuterPackages = async (req, res) => {
+  try {
+    const userId = req.user.user_id; // from auth middleware
+    const { rows } = req.body;
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No rows provided",
+      });
+    }
+
+    const result = await service.bulkCreateOuterPackages(rows, userId);
+
+    res.json({
+      success: true,
+      message: "Chunk uploaded successfully",
+      ...result,
+    });
+  } catch (error) {
+    console.error("Bulk upload error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const bulkUploadInnerPackages = async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+    const { rows } = req.body;
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No rows provided",
+      });
+    }
+
+    const result = await service.bulkCreateInnerPackages(rows, userId);
+
+    res.json({
+      success: true,
+      message: "Inner packages uploaded successfully",
+      ...result,
+    });
+  } catch (error) {
+    console.error("Inner bulk upload error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
     });
   }
 };

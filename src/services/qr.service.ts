@@ -119,3 +119,98 @@ export const generateQrCode = async (
     s3_key: s3Key,
   };
 };
+const getPackagesForBulkQR = async (filters: any) => {
+  const conditions: string[] = [];
+  const values: any[] = [];
+
+  if (filters.centre) {
+    values.push(filters.centre);
+    conditions.push(`centre_id = $${values.length}`);
+  }
+
+  if (filters.status) {
+    values.push(filters.status);
+    conditions.push(`status = $${values.length}`);
+  }
+
+  if (filters.from_date) {
+    values.push(filters.from_date);
+    conditions.push(`created_on >= $${values.length}`);
+  }
+
+  if (filters.to_date) {
+    values.push(filters.to_date);
+    conditions.push(`created_on <= $${values.length}`);
+  }
+
+  if (filters.tracking_id) {
+    values.push(filters.tracking_id);
+    conditions.push(`tracking_id = $${values.length}`);
+  }
+
+  const whereClause = conditions.length
+    ? `WHERE ${conditions.join(" AND ")}`
+    : "";
+
+  const { rows } = await db.query(
+    `
+    SELECT tracking_id,package_type 
+    FROM public.vw_all_packages
+    ${whereClause}
+    `,
+    values
+  );
+
+  return rows;
+};
+
+export const bulkGenerateQrCodes = async (filters: any, userId: number) => {
+  try {
+    //debugger;
+    const packages = await getPackagesForBulkQR(filters);
+
+    if (!packages.length) {
+      return {
+        total: 0,
+        generated_count: 0,
+        failed_count: 0,
+        failed_tracking_ids: [],
+      };
+    }
+
+    let successCount = 0;
+    let failed: string[] = [];
+
+    // 🔹 batch size (safe for S3 + CPU)
+    const BATCH_SIZE = 10;
+
+    for (let i = 0; i < packages.length; i += BATCH_SIZE) {
+      const batch = packages.slice(i, i + BATCH_SIZE);
+
+      for (const pkg of batch) {
+        try {
+          await generateQrCode(pkg.tracking_id, pkg.package_type, {}, userId);
+          successCount++;
+        } catch (err) {
+          console.error("QR failed:", pkg.tracking_id, err);
+          failed.push(pkg.tracking_id);
+        }
+      }
+    }
+
+    return {
+      total: packages.length,
+      generated_count: successCount,
+      failed_count: failed.length,
+      failed_tracking_ids: failed,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      total: 0,
+      generated_count: 0,
+      failed_count: 0,
+      failed_tracking_ids: [],
+    };
+  }
+};

@@ -77,4 +77,11 @@ router.post(
 );
 
 router.get("/:trackingId/events", authMiddleware, controller.getEvents);
+
+router.post("/bulk-upload", authMiddleware, controller.bulkUploadOuterPackages);
+router.post(
+  "/bulk-upload-inner",
+  authMiddleware,
+  controller.bulkUploadInnerPackages
+);
 export default router;

@@ -12,7 +12,13 @@ router.post(
   allowRoles([ROLES.NTA_ADMIN, ROLES.DISPATCH]),
   controller.createQr
 );
-
+router.post(
+  "/bulk-generate-qr",
+  authMiddleware,
+  allowRoles([ROLES.NTA_ADMIN, ROLES.DISPATCH]),
+  controller.createQrBulk
+);
+router.get("/print-centre-wise", authMiddleware, controller.printCentreWiseQR);
 router.get("/:trackingId", authMiddleware, controller.getQr);
 
 export default router;
