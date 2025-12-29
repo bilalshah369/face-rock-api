@@ -92,8 +92,8 @@ export const getAllPackages = async (req: Request, res: Response) => {
 
     const query = `
       SELECT a.*,b.centre_code,b.centre_name,a.tracking_id as outer_tracking_id
-      FROM outer_packages a
-      inner join public.centres b on a.destination_centre_id=b.centre_id
+      FROM public.vw_all_packages a
+      inner join public.centres b on a.centre_id=b.centre_id
       ${whereClause}
       ORDER BY created_on DESC
       LIMIT $${values.length + 1}
