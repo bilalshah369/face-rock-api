@@ -9,6 +9,7 @@ export interface ScanPayload {
   scan_mode: "OFFLINE" | "ONLINE";
   device_id?: string;
   scanned_phone?: string;
+  scan_status?: string;
 }
 
 export const saveScan = async (scan: ScanPayload, userId: number) => {
@@ -16,8 +17,8 @@ export const saveScan = async (scan: ScanPayload, userId: number) => {
     INSERT INTO scan_logs
       (tracking_id, qr_type, scanned_by, scanned_phone,
        scan_datetime, latitude, longitude,
-       scan_mode, device_id, created_by)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+       scan_mode, device_id, created_by,scan_status)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
     RETURNING scan_id;
   `;
 
@@ -32,6 +33,7 @@ export const saveScan = async (scan: ScanPayload, userId: number) => {
     scan.scan_mode,
     scan.device_id || null,
     userId,
+    scan.scan_status,
   ];
 
   const result = await db.query(scanQuery, values);

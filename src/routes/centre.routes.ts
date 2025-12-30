@@ -21,4 +21,15 @@ router.post(
 
 router.get("/", authMiddleware, controller.list);
 
+router.post(
+  "/centre-package-route",
+  authMiddleware,
+  controller.saveCentrePackageRoute
+);
+router.get(
+  "/centre-package-route/:centre_id",
+  authMiddleware,
+  controller.getCentrePackageRoute
+);
+
 export default router;
