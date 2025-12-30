@@ -81,6 +81,7 @@ type ScanPoint = {
   scan_status: string;
   scan_datetime: string;
   centre_name: string;
+  tracking_id: string;
 };
 
 type DestinationJourney = {
@@ -155,6 +156,7 @@ ORDER BY a.scan_datetime ASC;
           scan_status: "Destination",
           scan_datetime: "-",
           centre_name: row.centre_name,
+          tracking_id: "",
         },
         scans: [],
       });
@@ -166,6 +168,7 @@ ORDER BY a.scan_datetime ASC;
       scan_status: row.scan_status,
       scan_datetime: row.scan_datetime,
       centre_name: "-",
+      tracking_id: row.tracking_id,
     });
   }
 
