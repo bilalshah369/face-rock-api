@@ -22,7 +22,8 @@ export const generateQrCode = async (
     p.tracking_id,
     p.encrypted_qr_payload,
     c.centre_name,c.centre_code,
-    p.package_type
+    p.package_type,
+    p.centre_id
   FROM (
     SELECT
       tracking_id,
@@ -56,6 +57,7 @@ export const generateQrCode = async (
   const payload = JSON.stringify({
     tracking_id: trackingId,
     qr_type: qrType,
+    centre_id: packageData.centre_id,
     centre_name: packageData.centre_name,
     encrypted_qr_payload: packageData.encrypted_qr_payload,
     //package_type: packageData.package_type,
@@ -154,7 +156,7 @@ const getPackagesForBulkQR = async (filters: any) => {
 
   const { rows } = await db.query(
     `
-    SELECT tracking_id,package_type 
+    SELECT tracking_id,package_type,centre_id 
     FROM public.vw_all_packages
     ${whereClause}
     `,

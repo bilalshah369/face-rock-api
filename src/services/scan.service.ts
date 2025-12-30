@@ -10,6 +10,7 @@ export interface ScanPayload {
   device_id?: string;
   scanned_phone?: string;
   scan_status?: string;
+  centre_id?: number;
 }
 
 export const saveScan = async (scan: ScanPayload, userId: number) => {
@@ -17,8 +18,8 @@ export const saveScan = async (scan: ScanPayload, userId: number) => {
     INSERT INTO scan_logs
       (tracking_id, qr_type, scanned_by, scanned_phone,
        scan_datetime, latitude, longitude,
-       scan_mode, device_id, created_by,scan_status)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+       scan_mode, device_id, created_by,scan_status,centre_id)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
     RETURNING scan_id;
   `;
 
@@ -34,6 +35,7 @@ export const saveScan = async (scan: ScanPayload, userId: number) => {
     scan.device_id || null,
     userId,
     scan.scan_status,
+    scan.centre_id,
   ];
 
   const result = await db.query(scanQuery, values);
@@ -76,6 +78,9 @@ export const getScanHistory = async (trackingId: string) => {
 type ScanPoint = {
   latitude: number;
   longitude: number;
+  scan_status: string;
+  scan_datetime: string;
+  centre_name: string;
 };
 
 type DestinationJourney = {
@@ -97,6 +102,7 @@ export const getScanJourney = async (
   a.scan_datetime,
   a.latitude,
   a.longitude,
+  a.scan_status,
 
   -- user (who scanned)
   u.user_id AS scanned_by_user_id,
@@ -106,6 +112,7 @@ export const getScanJourney = async (
   c.centre_id,
   c.latitude AS centre_latitude,
   c.longitude AS centre_longitude,
+  c.centre_name,
 
   -- package info
   p.package_id,
@@ -145,6 +152,9 @@ ORDER BY a.scan_datetime ASC;
         destinationLocation: {
           latitude: Number(row.centre_latitude),
           longitude: Number(row.centre_longitude),
+          scan_status: "Destination",
+          scan_datetime: "-",
+          centre_name: row.centre_name,
         },
         scans: [],
       });
@@ -153,6 +163,9 @@ ORDER BY a.scan_datetime ASC;
     journeyMap.get(centreId)!.scans.push({
       latitude: Number(row.latitude),
       longitude: Number(row.longitude),
+      scan_status: row.scan_status,
+      scan_datetime: row.scan_datetime,
+      centre_name: "-",
     });
   }
 
