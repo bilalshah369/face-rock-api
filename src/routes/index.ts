@@ -5,6 +5,7 @@ import authRoutes from "./auth.routes";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import packageRoutes from "./package.routes";
 import scanRoutes from "./scan.routes";
+import studentRoutes from "./student.routes";
 import stateRoutes from "./state.routes";
 import cityRoutes from "./city.routes";
 import centreRoutes from "./centre.routes";
@@ -26,6 +27,7 @@ router.use("/masters/centres", centreRoutes);
 router.use("/scans", scanRoutes);
 router.use("/auth", authRoutes);
 router.use("/packages", packageRoutes);
+router.use("/student-applications", studentRoutes);
 
 router.use("/qrcode", qrRoutes);
 router.get("/health", async (_req, res) => {
