@@ -104,7 +104,7 @@ export const getPackageByTracking = async (trackingId: string) => {
 };
 const buildS3Url = (path: string | null) => {
   if (!path) return null;
-
+  //bilal
   const qrImageUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${
     process.env.AWS_REGION
   }.amazonaws.com/${path.replace(/\\/g, "/")}`;
