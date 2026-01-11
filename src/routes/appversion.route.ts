@@ -21,7 +21,7 @@ const GLOBAL_VERSION: Record<Platform, VersionCheckResponse> = {
     versionCode: "262",
     forceUpdate: true,
     //updateUrl: "https://play.google.com/store/apps/details?id=com.myapp",
-    updateUrl: "https://package-tracking-api-pf4p.onrender.com/download/apk",
+    updateUrl: "https://nta-face-rock-api.onrender.com/download/apk",
     message: "Please update the app to continue.",
   },
   ios: {
@@ -44,7 +44,7 @@ router.post(
     }
 
     const serverConfig = GLOBAL_VERSION[platform];
-
+    debugger;
     // 🔑 Only comparison logic
     const shouldForceUpdate =
       serverConfig.forceUpdate && versionCode !== serverConfig.versionCode;

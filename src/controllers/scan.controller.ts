@@ -76,7 +76,7 @@ export const singleScan = async (req: Request, res: Response) => {
       [centre_id]
     );
 
-    if (routeResult.rowCount < 2) {
+    if (routeResult.rowCount === 0) {
       scan.status = "NO_ROUTE";
     } else {
       /* 🔹 Convert DB rows to route array */

@@ -11,6 +11,8 @@ export interface ScanPayload {
   scanned_phone?: string;
   scan_status?: string;
   centre_id?: number;
+  name?: string;
+  face_status?: string;
 }
 
 export const saveScan = async (scan: ScanPayload, userId: number) => {
@@ -18,8 +20,8 @@ export const saveScan = async (scan: ScanPayload, userId: number) => {
     INSERT INTO scan_logs
       (tracking_id, qr_type, scanned_by, scanned_phone,
        scan_datetime, latitude, longitude,
-       scan_mode, device_id, created_by,scan_status,centre_id)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       scan_mode, device_id, created_by,scan_status,centre_id,name,face_status)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
     RETURNING scan_id;
   `;
 
@@ -36,26 +38,42 @@ export const saveScan = async (scan: ScanPayload, userId: number) => {
     userId,
     scan.scan_status,
     scan.centre_id,
+    scan.name,
+    scan.face_status,
   ];
 
   const result = await db.query(scanQuery, values);
+  //update status
+  try {
+    if (scan.qr_type === "OUTER") {
+      const updateQuery = `
+      UPDATE public.student_applications
+      SET application_status = $2
+      WHERE tracking_id = $1
+        AND application_status IS DISTINCT FROM 'VERIFIED'
+    `;
 
+      await db.query(updateQuery, [scan.tracking_id, scan.face_status]);
+    }
+  } catch (exp) {
+    console.error(exp);
+  }
   // Create movement event
-  const eventQuery = `
-    INSERT INTO package_events
-      (tracking_id,    event_type, event_datetime, user_id,
-       latitude, longitude, created_by)
-    VALUES ($1,'IN_TRANSIT',$2,$3,$4,$5,$6);
-  `;
+  // const eventQuery = `
+  //   INSERT INTO package_events
+  //     (tracking_id,    event_type, event_datetime, user_id,
+  //      latitude, longitude, created_by)
+  //   VALUES ($1,'IN_TRANSIT',$2,$3,$4,$5,$6);
+  // `;
 
-  await db.query(eventQuery, [
-    scan.tracking_id,
-    scan.scan_datetime,
-    userId,
-    scan.latitude || null,
-    scan.longitude || null,
-    userId,
-  ]);
+  // await db.query(eventQuery, [
+  //   scan.tracking_id,
+  //   scan.scan_datetime,
+  //   userId,
+  //   scan.latitude || null,
+  //   scan.longitude || null,
+  //   userId,
+  // ]);
 
   return result.rows[0];
 };
