@@ -17,13 +17,29 @@ export interface ScanPayload {
 
 export const saveScan = async (scan: ScanPayload, userId: number) => {
   const scanQuery = `
-    INSERT INTO scan_logs
-      (tracking_id, qr_type, scanned_by, scanned_phone,
-       scan_datetime, latitude, longitude,
-       scan_mode, device_id, created_by,scan_status,centre_id,name,face_status)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
-    RETURNING scan_id;
-  `;
+  INSERT INTO scan_logs
+    (
+      tracking_id,
+      qr_type,
+      scanned_by,
+      scanned_phone,
+      scan_datetime,
+      latitude,
+      longitude,
+      scan_mode,
+      device_id,
+      created_by,
+      scan_status,
+      centre_id,
+      name,
+      face_status
+    )
+  VALUES
+    ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+  ON CONFLICT (tracking_id, scan_datetime, device_id)
+  DO NOTHING
+  RETURNING scan_id;
+`;
 
   const values = [
     scan.tracking_id,
@@ -43,21 +59,27 @@ export const saveScan = async (scan: ScanPayload, userId: number) => {
   ];
 
   const result = await db.query(scanQuery, values);
-  //update status
-  try {
-    if (scan.qr_type === "OUTER") {
-      const updateQuery = `
+
+  const scanId = result.rows.length > 0 ? result.rows[0].scan_id : null;
+
+  if (scanId !== null) {
+    //update status
+    try {
+      if (scan.qr_type === "OUTER") {
+        const updateQuery = `
       UPDATE public.student_applications
       SET application_status = $2
       WHERE tracking_id = $1
         AND application_status IS DISTINCT FROM 'VERIFIED'
     `;
 
-      await db.query(updateQuery, [scan.tracking_id, scan.face_status]);
+        await db.query(updateQuery, [scan.tracking_id, scan.face_status]);
+      }
+    } catch (exp) {
+      console.error(exp);
     }
-  } catch (exp) {
-    console.error(exp);
   }
+
   // Create movement event
   // const eventQuery = `
   //   INSERT INTO package_events
