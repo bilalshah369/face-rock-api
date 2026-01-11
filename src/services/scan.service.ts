@@ -69,7 +69,7 @@ export const saveScan = async (scan: ScanPayload, userId: number) => {
         const updateQuery = `
       UPDATE public.student_applications
       SET application_status = $2
-      WHERE tracking_id = $1
+      WHERE application_ref_no = $1
         AND application_status IS DISTINCT FROM 'VERIFIED'
     `;
 
