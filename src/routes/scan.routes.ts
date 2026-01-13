@@ -63,7 +63,20 @@ router.post(
   controller.syncScans
 );
 router.get("/getJourney", authMiddleware, controller.getJourney);
+router.get("/getAllScans", authMiddleware, controller.getAllScans);
 router.post("/single", authMiddleware, controller.singleScan);
+router.post("/singleManual", authMiddleware, controller.singleScanManual);
 router.get("/:trackingId", authMiddleware, controller.getScans);
+
+router.post(
+  "/recalculateRouteStatus",
+  authMiddleware,
+  controller.recalculateRouteStatus
+);
+router.post(
+  "/previewRouteCheck",
+  authMiddleware,
+  controller.previewGeographicBoundary
+);
 
 export default router;

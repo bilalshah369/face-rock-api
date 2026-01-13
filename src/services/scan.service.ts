@@ -114,6 +114,78 @@ export const getScanHistory = async (trackingId: string) => {
 
   return rows;
 };
+export const getAllScans = async (scan: any) => {
+  const { rows } = await db.query(
+    `
+    SELECT b.full_name, a.*
+    FROM scan_logs a
+    LEFT JOIN users b ON a.scanned_by = b.user_id
+    ORDER BY a.scan_datetime DESC
+    `
+  );
+  return rows;
+};
+export const getAllScansFiltered = async (params: {
+  page?: number;
+  limit?: number;
+  tracking_id?: string;
+  from_date?: string;
+  to_date?: string;
+}) => {
+  const { page = 1, limit = 10, tracking_id, from_date, to_date } = params;
+
+  const offset = (page - 1) * limit;
+
+  const values: any[] = [];
+  let whereClause = `WHERE 1=1`;
+
+  if (tracking_id) {
+    values.push(`%${tracking_id.toLowerCase()}%`);
+    whereClause += ` AND lower(a.tracking_id) LIKE $${values.length}`;
+  }
+
+  if (from_date) {
+    values.push(from_date);
+    whereClause += ` AND Date(a.scan_datetime) >= $${values.length}`;
+  }
+
+  if (to_date) {
+    values.push(to_date);
+    whereClause += ` AND Date(a.scan_datetime) <= $${values.length}`;
+  }
+
+  // pagination params
+  values.push(limit);
+  values.push(offset);
+
+  const dataQuery = `
+    SELECT b.full_name, a.*
+    FROM scan_logs a
+    LEFT JOIN users b ON a.scanned_by = b.user_id
+    ${whereClause}
+    ORDER BY a.scan_datetime DESC
+    LIMIT $${values.length - 1}
+    OFFSET $${values.length}
+  `;
+
+  const countQuery = `
+    SELECT COUNT(*) AS total
+    FROM scan_logs a
+    ${whereClause}
+  `;
+
+  const [{ rows }, countResult] = await Promise.all([
+    db.query(dataQuery, values),
+    db.query(countQuery, values.slice(0, values.length - 2)),
+  ]);
+
+  return {
+    data: rows,
+    count: Number(countResult.rows[0].total),
+    page,
+    limit,
+  };
+};
 
 type ScanPoint = {
   latitude: number;
